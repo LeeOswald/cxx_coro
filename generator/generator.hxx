@@ -202,7 +202,7 @@ private:
 template <typename _Container>
 auto make_generator_from(_Container&& container) -> generator<std::decay_t<typename _Container::value_type>>
 {
-    VerboseBlock("make_generator_from");
+    VerboseBlock("make_generator_from()");
 
     for (auto& value : container)
     {

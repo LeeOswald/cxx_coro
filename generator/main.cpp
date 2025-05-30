@@ -42,6 +42,49 @@ void iterate_thru()
 }
 
 
+class coro_exception
+    : public std::exception
+{
+public:
+    coro_exception(std::string_view msg)
+        : what_(msg)
+    {
+    }
+
+    const char* what() const override
+    {
+        return what_.c_str();
+    }
+
+private:
+    std::string what_;
+};
+
+generator<int> generate_exception()
+{
+    VerboseBlock("generate_exception()");
+
+    throw coro_exception("Lol this is uncaught");
+    co_return;
+}
+
+void test_exception()
+{
+    VerboseBlock("test_exception()");
+
+    auto g = generate_exception();
+
+    try
+    {
+        [[maybe_unused]] auto v = g.next();
+    }
+    catch (std::exception& e)
+    {
+        Error("Caught [{}]", e.what());
+    }
+}
+
+
 } // namespace {}
 
 
@@ -51,6 +94,8 @@ int main()
     generate_from_strings();
     Info("---------------------");
     iterate_thru();
+    Info("---------------------");
+    test_exception();
  
     return 0;
 }
