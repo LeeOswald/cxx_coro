@@ -4,6 +4,7 @@
 
 #define CXX_CORO_EXPORT
 
+#include <cassert>
 #include <coroutine>
 #include <exception>
 #include <iostream>

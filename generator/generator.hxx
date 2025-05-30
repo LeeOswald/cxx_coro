@@ -127,13 +127,80 @@ struct generator
         return std::get_if<value_type>(&handle_.promise().value);
     }
 
+    struct iterator
+    {
+        using difference_type = std::ptrdiff_t;
+        using value_type = _ValueType;
+        using reference_type = std::add_lvalue_reference_t<value_type>;
+
+        [[nodiscard]] bool operator==(const iterator& other) const noexcept
+        {
+            if (owner_ != other.owner_)
+                return false;
+
+            if (!owner_)
+                return true; // both are at end()
+
+            return false;
+        }
+
+        iterator& operator++()
+        {
+            if (!owner_)
+                return *this;
+
+            value_ = owner_->next();
+            fetched_ = true;
+            if (!value_)
+                owner_ = nullptr; // at end()
+
+            return *this;
+        }
+
+        reference_type operator*() const
+        {
+            assert(owner_);
+
+            if (!fetched_)
+            {
+                value_ = owner_->next();
+                fetched_ = true;
+            }
+
+            assert(value_);
+            return *value_;
+        }
+
+    private:
+        friend struct generator;
+
+        constexpr explicit iterator(generator* owner = nullptr) noexcept
+            : owner_(owner)
+        {
+        }
+
+        mutable generator* owner_;
+        mutable value_type* value_ = nullptr;
+        mutable bool fetched_ = false;
+    };
+
+    iterator begin() noexcept
+    {
+        return iterator{ this };
+    }
+
+    constexpr iterator end() noexcept
+    {
+        return iterator{ nullptr };
+    }
+
 private:
     handle handle_;
 };
 
 
-template <typename Container>
-auto make_generator_from(Container&& container) -> generator<typename std::decay_t<Container>::value_type>
+template <typename _Container>
+auto make_generator_from(_Container&& container) -> generator<std::decay_t<typename _Container::value_type>>
 {
     VerboseBlock("make_generator_from");
 
@@ -147,3 +214,6 @@ auto make_generator_from(Container&& container) -> generator<typename std::decay
     Verbose("end of source");
     co_return;
 }
+
+
+

@@ -12,7 +12,7 @@ if(CXX_CORO_ENABLE_LOG)
     add_definitions(-DCXX_CORO_ENABLE_LOG=1)
 endif()
 
-option(CXX_CORO_VERBOSE_LOG "Enable verbose logging" ON)
+option(CXX_CORO_VERBOSE_LOG "Enable verbose logging" OFF)
 if(CXX_CORO_VERBOSE_LOG)
     add_definitions(-DCXX_CORO_VERBOSE_LOG=1)
 endif()
