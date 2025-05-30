@@ -69,3 +69,6 @@ if(CXX_CORO_WINDOWS)
 endif()
 
 add_subdirectory(common)
+add_library(coro_cxx::common ALIAS common)
+
+add_subdirectory(generator)

@@ -4,5 +4,8 @@
 
 #define CXX_CORO_EXPORT
 
+#include <coroutine>
+#include <exception>
+#include <iostream>
 
 #include "debug.hxx"
