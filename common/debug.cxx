@@ -4,13 +4,10 @@
 #include <iostream>
 #include <sstream>
 #include <syncstream>
-
+#include <thread>
 
 #if CXX_CORO_WINDOWS
     #include <windows.h>
-#elif CXX_CORO_LINUX
-    #define _GNU_SOURCE
-    #include <unistd.h>
 #endif
 
 namespace cxx_coro
@@ -21,12 +18,7 @@ namespace
 
 void defaultTracer(Level level, std::uint32_t indent, std::string_view message)
 {
-    std::uintptr_t tid = 0;
-#if CXX_CORO_WINDOWS
-    tid = ::GetCurrentThreadId();
-#elif CXX_CORO_LINUX
-    tid = ::gettid();
-#endif
+    auto tid = std::this_thread::get_id();
 
     std::ostringstream ss;
     switch (level)

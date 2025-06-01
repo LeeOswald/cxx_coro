@@ -58,7 +58,7 @@ struct generator
 
         void unhandled_exception()
         {
-            Verbose("generator::promise_type::unhandled_exception()");
+            Error("generator::promise_type::unhandled_exception()");
 
             value.template emplace<Exception>(std::current_exception());
         }

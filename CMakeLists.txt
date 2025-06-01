@@ -72,3 +72,4 @@ add_subdirectory(common)
 add_library(coro_cxx::common ALIAS common)
 
 add_subdirectory(generator)
+add_subdirectory(interruptible)
