@@ -62,6 +62,10 @@ struct generator
 
             value.template emplace<Exception>(std::current_exception());
         }
+
+        // disable any use of co_await
+        template <typename _U>
+        std::suspend_never await_transform(_U&&) = delete;
     };
 
     using handle = std::coroutine_handle<promise_type>;

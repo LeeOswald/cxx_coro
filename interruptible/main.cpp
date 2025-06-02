@@ -73,7 +73,7 @@ interruptible_task do_sleep(_Executor&& executor, interruptible_task::shared_sta
     try
     {
         Info("Sleeping for 10 s, but you may press Ctrl-C to continue...");
-        co_await sleep(executor, 10s);
+        co_await sleep(executor, 10s); // <expr> -> promise.await_transform() -> <awaitable> -> awaitable.operator co_await() -> <awaiter>
         Info("Continuing...");
     }
     catch (std::exception& e)

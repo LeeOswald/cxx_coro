@@ -92,6 +92,8 @@ struct interruptible_task
                 shared_state::ptr state;
                 _Awaitable awaitable;
 
+                // The purpose of the await_ready() method is to allow you to avoid the cost of the <suspend-coroutine> operation in cases 
+                // where it is known that the operation will complete synchronously without needing to suspend.
                 bool await_ready()
                 {
                     VerboseBlock("{}.interruptible_task::promise_type::wrapper::await_ready()", fmt::ptr(this));
@@ -99,6 +101,9 @@ struct interruptible_task
                     return awaitable.await_ready();
                 }
 
+                // It is the responsibility of the await_suspend() method to schedule the coroutine for resumption(or destruction) at some point 
+                // in the future once the operation has completed.Note that returning false from await_suspend() counts as scheduling the coroutine 
+                // for immediate resumption on the current thread.
                 auto await_suspend(std::coroutine_handle<> coro)
                 {
                     VerboseBlock("{}.interruptible_task::promise_type::wrapper::await_suspend()", fmt::ptr(this));
@@ -111,6 +116,8 @@ struct interruptible_task
                     return awaitable.await_suspend(coro);
                 }
 
+                // The return-value of the await_resume() method call becomes the result of the co_await expression.
+                // The await_resume() method can also throw an exception in which case the exception propagates out of the co_await expression.
                 auto await_resume()
                 {
                     VerboseBlock("{}.interruptible_task::promise_type::wrapper::await_resume()", fmt::ptr(this));
