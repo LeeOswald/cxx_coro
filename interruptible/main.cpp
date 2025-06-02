@@ -24,11 +24,11 @@ auto sleep(_Executor&& executor, _Duration&& duration)
 
         void await_suspend(std::coroutine_handle<> coro)
         {
-            Verbose("sleep::awaitable::await_suspend()");
+            VerboseBlock("sleep::awaitable::await_suspend()");
 
             timer.async_wait([this, coro](auto ec) mutable
             {
-                VerboseBlock("{}", CXX_CORO_FUNCTION);
+                VerboseBlock("sleep::awaitable::timer_callback()");
 
                 if (!error)
                 {
@@ -53,6 +53,7 @@ auto sleep(_Executor&& executor, _Duration&& duration)
 
             if (error)
             {
+                Verbose("Rethrowing [{}]", error.message());
                 throw boost::system::system_error(error);
             }
         }
@@ -75,9 +76,12 @@ interruptible_task do_sleep(_Executor&& executor, interruptible_task::shared_sta
         co_await sleep(executor, 10s);
         Info("Continuing...");
     }
-    catch (...)
+    catch (std::exception& e)
     {
+        // catch exceptions thrown from sleep::awaitable::await_resume()
+        Info("Caught [{}]", e.what());
     }
+
 
     Info("Sleeping for 10 s, but you can not interrupt...");
 
@@ -85,8 +89,6 @@ interruptible_task do_sleep(_Executor&& executor, interruptible_task::shared_sta
     co_await sleep(executor, 10s); // cannot be interrupted
 
     Info("All done. Press Ctrl-C to exit.");
-
-    
 }
 
 
@@ -103,9 +105,9 @@ int main()
 
     auto job = do_sleep(context.get_executor(), std::make_shared<interruptible_task::shared_state>());
 
-    signals.async_wait([job = std::move(job)](auto ec, auto code) mutable
+    signals.async_wait([&job](auto ec, auto code)
     {
-        VerboseBlock("{}", CXX_CORO_FUNCTION);
+        VerboseBlock("main::SIGINT()");
 
         job.terminate();
     });
