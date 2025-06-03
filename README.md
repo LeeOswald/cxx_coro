@@ -5,6 +5,8 @@ Experiments with C++'20 coroutines
 ```
 /generator                          simple coroutine-based generator
 /interruptible                      cancellable coroutines
+/echo_server                        TCP echo server
+echo_client.py                      client for echo server testing 
 ```
 
 ## building
