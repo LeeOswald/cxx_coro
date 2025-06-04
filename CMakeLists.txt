@@ -53,6 +53,8 @@ link_directories(${Boost_LIBRARY_DIRS})
 # {fmt}
 find_package(fmt REQUIRED)
 
+find_package(Python3 3 REQUIRED COMPONENTS Development.Module)
+
 if(MSVC)
     add_compile_options("/utf-8")
 endif()
@@ -75,4 +77,5 @@ add_subdirectory(generator)
 add_subdirectory(echo_server)
 add_subdirectory(event)
 add_subdirectory(interruptible)
+add_subdirectory(py_echo_server)
 add_subdirectory(std_generator)

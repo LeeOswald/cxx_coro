@@ -3,10 +3,12 @@ Experiments with C++'20 coroutines
 
 ## what's in
 ```
-/generator                          simple coroutine-based generator
-/interruptible                      cancellable coroutines
-/echo_server                        TCP echo server
-echo_client.py                      client for echo server testing 
+generator                          simple coroutine-based generator
+interruptible                      cancellable coroutines
+echo_server                        TCP echo server
+echo_client.py                     client for echo server testing 
+py_echo_server                     echo-server as a native module (Echo.pyd) for echo_server.py (see below)
+echo_server.py                     python echo server (needs Echo.pyd in $PATH)
 ```
 
 ## building
