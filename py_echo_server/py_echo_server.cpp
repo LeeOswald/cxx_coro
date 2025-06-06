@@ -36,17 +36,20 @@ struct PyResult
     Py_ssize_t len;
 };
 
+
+template <boost::asio::execution::executor Ex>
 struct PythonApp 
 {
-    PythonApp(PyObject* app)
-        : app_{ app }
+    PythonApp(Ex ex, PyObject* app)
+        : ex_{ std::move(ex) }
+        , app_{ app }
         , vecCall_{ PyVectorcall_Function(app) } 
     {
         VerboseBlock("PythonApp::PythonApp()");
     };
 
-    template <typename CT>
-    auto run(const std::vector<char>& data, PyObject* prev, CT&& token) 
+    template <typename _CompletionToken>
+    auto run(const std::vector<char>& data, PyObject* prev, _CompletionToken&& token) 
     {
         VerboseBlock("PythonApp::run()");
 
@@ -54,33 +57,51 @@ struct PythonApp
         {
             VerboseBlock("PythonApp::run::init()");
 
-            std::move(handler)(run_impl(data, prev));
+            // dispatch to the ex_ executor
+            boost::asio::dispatch(ex_, [this, prev, &data, h = std::move(handler)]() mutable 
+            {
+                VerboseBlock("PythonApp::run::init::2()");
+
+                // asio::append is somewhat analogous to std::bind_back, but for completion tokens.
+                // It produces a completion token which passes additional arguments to an underlying completion token.
+                // In this instance, the underlying completion token is the completion handler for the entire PythonApp.run asynchronous operation, 
+                // and the argument we want it to be invoked with is the result of the Python operation.
+
+                // The completion handler has an associated executor, the executor it originated from.The second dispatch 
+                // schedules the completion handler to be run on that executor, and execution inside the original coroutine is resumed by that completion handler.
+                boost::asio::dispatch(boost::asio::append(std::move(h), run_impl(data, prev)));
+            });
         };
 
-        return boost::asio::async_initiate<CT, void(PyResult)>(init, token);
+        return boost::asio::async_initiate<_CompletionToken, void(PyResult)>(init, token);
     }
 
-    template <typename CT> auto decref_pyobj(PyObject* obj, CT&& token) 
+    template <typename _CompletionToken> 
+    auto decref_pyobj(PyObject* obj, _CompletionToken&& token) 
     {
         VerboseBlock("PythonApp::decref_pyobj()");
 
         auto init = [this, obj](auto handler) 
         {
             VerboseBlock("PythonApp::decref_pyobj::init()");
+            
+            
+            boost::asio::dispatch(ex_, [this, obj, h = std::move(handler)]() mutable
+            {
+                VerboseBlock("PythonApp::decref_pyobj::init::2()");
 
-            decref_pyobj_impl(obj);
-            std::move(handler)();
+                decref_pyobj_impl(obj);
+                boost::asio::dispatch(std::move(h));
+            });
         };
 
-        return boost::asio::async_initiate<CT, void()>(init, token);
+        return boost::asio::async_initiate<_CompletionToken, void()>(init, token);
     }
 
 private:
     PyResult run_impl(const std::vector<char>& data, PyObject* prev) 
     {
         VerboseBlock("PythonApp::run_impl()");
-
-        auto state{ PyGILState_Ensure() };
 
         Py_XDECREF(prev);
         PyResult ret{};
@@ -96,7 +117,6 @@ private:
         {
             PyErr_Print();
             PyErr_Clear();
-            PyGILState_Release(state);
             return ret;
         }
 
@@ -107,7 +127,6 @@ private:
             Py_CLEAR(ret.obj);
         }
 
-        PyGILState_Release(state);
         return ret;
     }
 
@@ -115,11 +134,10 @@ private:
     {
         VerboseBlock("PythonApp::decref_pyobj_impl()");
 
-        auto state{ PyGILState_Ensure() };
         Py_DECREF(obj);
-        PyGILState_Release(state);
     }
 
+    Ex ex_;
     PyObject* app_;
     vectorcallfunc vecCall_;
 };
@@ -138,7 +156,7 @@ constexpr auto nbeswap(std::integral auto val) noexcept
 } // namespace util {}
 
 
-boost::asio::awaitable<void> client_handler(boost::asio::ip::tcp::socket s, PythonApp& app)
+boost::asio::awaitable<void> client_handler(boost::asio::ip::tcp::socket s, auto& app)
 {
     VerboseBlock("client_handler()");
 
@@ -182,7 +200,7 @@ boost::asio::awaitable<void> client_handler(boost::asio::ip::tcp::socket s, Pyth
         co_await app.decref_pyobj(pr.obj, boost::asio::deferred);
 }
 
-boost::asio::awaitable<void> listener(boost::asio::ip::tcp::endpoint ep, PythonApp& app)
+boost::asio::awaitable<void> listener(boost::asio::ip::tcp::endpoint ep, auto& app)
 {
     VerboseBlock("listener()");
 
@@ -199,7 +217,7 @@ boost::asio::awaitable<void> listener(boost::asio::ip::tcp::endpoint ep, PythonA
     }
 }
 
-void accept(boost::asio::execution::executor auto ex, std::string_view host, std::string_view port, PythonApp& app)
+void accept(boost::asio::execution::executor auto ex, std::string_view host, std::string_view port, auto& app)
 {
     VerboseBlock("accept()");
 
@@ -242,17 +260,15 @@ PyObject* run(PyObject* self, PyObject* const* args, Py_ssize_t nargs, PyObject*
         io.stop();
     });
 
-    PythonApp app{ appObj };
+    PythonApp app{ boost::asio::make_strand(io), appObj };
     accept(io.get_executor(), host, port, app);
 
-    PyThreadState* thread{ PyEval_SaveThread() };
     io.run();
 
     signals.cancel();
     signals.clear();
     std::signal(SIGINT, old_sigint);
 
-    PyEval_RestoreThread(thread);
     Py_DecRef(appObj);
     Py_RETURN_NONE;
 }
