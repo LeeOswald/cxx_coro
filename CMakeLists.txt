@@ -73,6 +73,7 @@ endif()
 add_subdirectory(common)
 add_library(coro_cxx::common ALIAS common)
 
+add_subdirectory(asio_coro)
 add_subdirectory(asio_dispatch)
 add_subdirectory(generator)
 add_subdirectory(echo_server)

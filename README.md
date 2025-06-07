@@ -3,6 +3,7 @@ Experiments with C++'20 coroutines
 
 ## what's in
 ```
+asio_coro                          TCP echo server with boost::asio::experimental::coro
 generator                          simple coroutine-based generator
 interruptible                      cancellable coroutines
 echo_server                        TCP echo server
