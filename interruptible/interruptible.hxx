@@ -32,14 +32,14 @@ struct interruptible_task
         promise_type()
             : state{ std::make_shared<shared_state>() }
         {
-            VerboseBlock("{}.interruptible_task::promise_type::promise_type()", fmt::ptr(this));
+            VerboseBlock("{}.interruptible_task::promise_type::promise_type()", Ptr(this));
         }
 
         template <typename ..._Args>
         explicit promise_type(_Args&... args)
             : promise_type{}
         {
-            VerboseBlock("{}.interruptible_task::promise_type::promise_type(...)", fmt::ptr(this));
+            VerboseBlock("{}.interruptible_task::promise_type::promise_type(...)", Ptr(this));
 
             ([this](auto& param) {
                 if constexpr (std::is_same_v<_Args, shared_state::ptr>)
@@ -53,39 +53,39 @@ struct interruptible_task
 
         auto get_return_object()
         {
-            VerboseBlock("{}.interruptible_task::promise_type::get_return_object()", fmt::ptr(this));
+            VerboseBlock("{}.interruptible_task::promise_type::get_return_object()", Ptr(this));
 
             return interruptible_task{ state };
         }
 
         std::suspend_never initial_suspend() noexcept
         {
-            Verbose("{}.interruptible_task::promise_type::initial_suspend()", fmt::ptr(this));
+            Verbose("{}.interruptible_task::promise_type::initial_suspend()", Ptr(this));
 
             return {};
         }
 
         std::suspend_never final_suspend() noexcept
         {
-            Verbose("{}.interruptible_task::promise_type::final_suspend()", fmt::ptr(this));
+            Verbose("{}.interruptible_task::promise_type::final_suspend()", Ptr(this));
 
             return {};
         }
 
         void return_void()
         {
-            Verbose("{}.interruptible_task::promise_type::return_void()", fmt::ptr(this));
+            Verbose("{}.interruptible_task::promise_type::return_void()", Ptr(this));
         }
 
         void unhandled_exception()
         {
-            Error("{}.interruptible_task::promise_type::unhandled_exception()", fmt::ptr(this));
+            Error("{}.interruptible_task::promise_type::unhandled_exception()", Ptr(this));
         }
 
         template <typename _Awaitable>
         auto await_transform(_Awaitable&& awaitable)
         {
-            VerboseBlock("{}.interruptible_task::promise_type::await_transform()", fmt::ptr(this));
+            VerboseBlock("{}.interruptible_task::promise_type::await_transform()", Ptr(this));
 
             struct [[nodiscard]] wrapper
             {
@@ -96,7 +96,7 @@ struct interruptible_task
                 // where it is known that the operation will complete synchronously without needing to suspend.
                 bool await_ready()
                 {
-                    VerboseBlock("{}.interruptible_task::promise_type::wrapper::await_ready()", fmt::ptr(this));
+                    VerboseBlock("{}.interruptible_task::promise_type::wrapper::await_ready()", Ptr(this));
 
                     return awaitable.await_ready();
                 }
@@ -106,7 +106,7 @@ struct interruptible_task
                 // for immediate resumption on the current thread.
                 auto await_suspend(std::coroutine_handle<> coro)
                 {
-                    VerboseBlock("{}.interruptible_task::promise_type::wrapper::await_suspend()", fmt::ptr(this));
+                    VerboseBlock("{}.interruptible_task::promise_type::wrapper::await_suspend()", Ptr(this));
 
                     state->on_terminate = [this](boost::system::error_code ec)
                     {
@@ -120,7 +120,7 @@ struct interruptible_task
                 // The await_resume() method can also throw an exception in which case the exception propagates out of the co_await expression.
                 auto await_resume()
                 {
-                    VerboseBlock("{}.interruptible_task::promise_type::wrapper::await_resume()", fmt::ptr(this));
+                    VerboseBlock("{}.interruptible_task::promise_type::wrapper::await_resume()", Ptr(this));
 
                     return awaitable.await_resume();
                 }
@@ -132,7 +132,7 @@ struct interruptible_task
 
     void terminate(boost::system::error_code ec = boost::asio::error::interrupted)
     {
-        VerboseBlock("{}.interruptible_task::terminate()", fmt::ptr(this));
+        VerboseBlock("{}.interruptible_task::terminate()", Ptr(this));
 
         auto ptr = state_.lock();
         if (!ptr)
@@ -159,7 +159,7 @@ struct interruptible_task
 
     ~interruptible_task()
     {
-        Verbose("{}.interruptible_task::~interruptible_task()", fmt::ptr(this));
+        Verbose("{}.interruptible_task::~interruptible_task()", Ptr(this));
     }
 
     interruptible_task(const interruptible_task&) = delete;
@@ -174,7 +174,7 @@ private:
     interruptible_task(std::weak_ptr<shared_state> state)
         : state_(std::move(state))
     {
-        Verbose("{}.interruptible_task::interruptible_task()", fmt::ptr(this));
+        Verbose("{}.interruptible_task::interruptible_task()", Ptr(this));
     }
 };
 

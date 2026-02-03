@@ -5,5 +5,3 @@ add_library(${TARGET_NAME} STATIC
     debug.hxx
     debug.cxx
 )
-
-target_link_libraries(${TARGET_NAME} PUBLIC fmt::fmt)

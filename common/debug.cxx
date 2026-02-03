@@ -2,12 +2,14 @@
 
 #include <cctype>
 #include <iostream>
+#include <mutex>
 #include <sstream>
-#include <syncstream>
 #include <thread>
 
 #if CXX_CORO_WINDOWS
     #include <windows.h>
+#else
+    #include <unistd.h>
 #endif
 
 namespace cxx_coro
@@ -16,9 +18,16 @@ namespace cxx_coro
 namespace
 {
 
+std::mutex g_lock;
+
+
 void defaultTracer(Level level, std::uint32_t indent, std::string_view message)
 {
-    auto tid = std::this_thread::get_id();
+#if CXX_CORO_WINDOWS
+    auto tid = ::GetCurrentThreadId();
+#else
+    auto tid = ::gettid();
+#endif
 
     std::ostringstream ss;
     switch (level)
@@ -32,7 +41,7 @@ void defaultTracer(Level level, std::uint32_t indent, std::string_view message)
 
     while (indent)
     {
-        ss << "    ";
+        ss << "  ";
         --indent;
     }
 
@@ -40,10 +49,12 @@ void defaultTracer(Level level, std::uint32_t indent, std::string_view message)
 
     std::string msg(ss.str());
 
+    std:: lock_guard l(g_lock);
+
     if (level < Level::Error)
-        std::osyncstream(std::cout) << msg;
+        std::cout << msg;
     else
-        std::osyncstream(std::cerr) << msg;
+        std::cerr << msg;
 
 #if CXX_CORO_WINDOWS
     if (::IsDebuggerPresent())

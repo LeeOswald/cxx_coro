@@ -41,17 +41,10 @@ else()
     message(FATAL_ERROR "Unsupported OS")
 endif()
 
-# Boost
-if(POLICY CMP0167)
-  cmake_policy(SET CMP0167 NEW)
-endif()
 
-find_package(Boost REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
-
-# {fmt}
-find_package(fmt REQUIRED)
+find_package(Boost CONFIG REQUIRED)
+#include_directories(${Boost_INCLUDE_DIRS})
+#link_directories(${Boost_LIBRARY_DIRS})
 
 find_package(Python3 3 REQUIRED COMPONENTS Development.Module)
 
@@ -80,6 +73,8 @@ add_subdirectory(generator)
 add_subdirectory(echo_server)
 add_subdirectory(event)
 add_subdirectory(interruptible)
-add_subdirectory(proxy_server)
-add_subdirectory(py_echo_server)
-add_subdirectory(std_generator)
+if(CXX_CORO_WINDOWS)
+    add_subdirectory(proxy_server)
+    add_subdirectory(py_echo_server)
+endif()
+

@@ -5,10 +5,9 @@
 #endif
 
 #include <cassert>
+#include <format>
 #include <functional>
 #include <string>
-
-#include <fmt/format.h>
 
 
 namespace cxx_coro
@@ -31,25 +30,25 @@ CXX_CORO_EXPORT void writeln(Level level, std::string_view message);
 template <class... Args>
 void write(Level level, std::string_view format, Args&&... args)
 {
-    writeln(level, fmt::vformat(format, fmt::make_format_args(args...)));
+    writeln(level, std::vformat(format, std::make_format_args(args...)));
 }
 
 template <class... Args>
 void verbose(std::string_view format, Args&&... args)
 {
-    writeln(Level::Verbose, fmt::vformat(format, fmt::make_format_args(args...)));
+    writeln(Level::Verbose, std::vformat(format, std::make_format_args(args...)));
 }
 
 template <class... Args>
 void info(std::string_view format, Args&&... args)
 {
-    writeln(Level::Info, fmt::vformat(format, fmt::make_format_args(args...)));
+    writeln(Level::Info, std::vformat(format, std::make_format_args(args...)));
 }
 
 template <class... Args>
 void error(std::string_view format, Args&&... args)
 {
-    writeln(Level::Error, fmt::vformat(format, fmt::make_format_args(args...)));
+    writeln(Level::Error, std::vformat(format, std::make_format_args(args...)));
 }
 
 
@@ -63,7 +62,7 @@ struct CXX_CORO_EXPORT IndentScope
     template <class... Args>
     IndentScope(Level level, std::string_view format, Args&&... args)
     {
-        writeln(level, fmt::vformat(format, fmt::make_format_args(args...)));
+        writeln(level, std::vformat(format, std::make_format_args(args...)));
 
         indent();
     }

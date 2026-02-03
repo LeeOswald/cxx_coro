@@ -10,3 +10,10 @@
 #include <iostream>
 
 #include "debug.hxx"
+
+
+template <typename T>
+constexpr void const* Ptr(T const* p) noexcept
+{
+   return p;
+}

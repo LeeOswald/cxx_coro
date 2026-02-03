@@ -73,7 +73,7 @@ struct generator
     ~generator()
     {
         Verbose("generator::~generator()");
-        
+
         if (handle_)
             handle_.destroy();
     }
@@ -87,7 +87,7 @@ struct generator
     generator(handle h)
         : handle_(h)
     {
-        Verbose("generator::generator({})", fmt::ptr(h.address()));
+        Verbose("generator::generator({})", Ptr(h.address()));
     }
 
     generator(const generator&) = delete;
@@ -117,7 +117,7 @@ struct generator
     value_type* next()
     {
         Verbose("generator::next()");
-        
+
         if (handle_.done())
             return nullptr;
 

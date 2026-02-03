@@ -4,4 +4,4 @@ add_executable(${TARGET_NAME}
     main.cpp
 )
 
-target_link_libraries(${TARGET_NAME} PRIVATE boost::boost coro_cxx::common)
+target_link_libraries(${TARGET_NAME} PRIVATE Boost::boost coro_cxx::common)

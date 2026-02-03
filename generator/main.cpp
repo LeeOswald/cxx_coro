@@ -51,7 +51,7 @@ public:
     {
     }
 
-    const char* what() const override
+    const char* what() const noexcept override
     {
         return what_.c_str();
     }
